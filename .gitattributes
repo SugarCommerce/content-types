@@ -14,6 +14,7 @@
 /tests export-ignore
 /phpunit.xml export-ignore
 /phpunit.xml.dist export-ignore
+/phpunit-core.xml.dist export-ignore
 /.phpunit.result.cache export-ignore
 /.phpunit.cache export-ignore
 

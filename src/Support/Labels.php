@@ -49,7 +49,7 @@ final class Labels {
 	 *
 	 * @var array<string, string>
 	 */
-	private const POST_TYPE = [
+	private const array POST_TYPE = [
 		'name'                     => '%2$s',
 		'singular_name'            => '%1$s',
 		'add_new'                  => 'Add New %1$s',
@@ -93,12 +93,15 @@ final class Labels {
 	 *
 	 * @var array<string, string>
 	 */
-	private const TAXONOMY = [
+	private const array TAXONOMY = [
 		'name'                       => '%2$s',
 		'singular_name'              => '%1$s',
 		'search_items'               => 'Search %2$s',
 		'popular_items'              => 'Popular %2$s',
 		'all_items'                  => 'All %2$s',
+		// Core falls back to all_items for a taxonomy; said outright, so it
+		// is in the POT with the rest.
+		'archives'                   => 'All %2$s',
 		'edit_item'                  => 'Edit %1$s',
 		'view_item'                  => 'View %1$s',
 		'update_item'                => 'Update %1$s',
@@ -140,7 +143,7 @@ final class Labels {
 	 *
 	 * @var array<string, string>
 	 */
-	private const HIERARCHICAL = [
+	private const array HIERARCHICAL = [
 		'parent_item'              => 'Parent %1$s',
 		'parent_item_colon'        => 'Parent %1$s:',
 		'filter_by_item'           => 'Filter by %3$s',
@@ -152,7 +155,7 @@ final class Labels {
 	 *
 	 * @var array<string, string>
 	 */
-	private const FLAT = [
+	private const array FLAT = [
 		'popular_items'              => 'Popular %2$s',
 		'separate_items_with_commas' => 'Separate %4$s with commas',
 		'add_or_remove_items'        => 'Add or remove %4$s',

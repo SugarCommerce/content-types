@@ -9,6 +9,7 @@
     <testsuites>
         <testsuite name="Content Types">
             <directory>tests</directory>
+            <exclude>tests/Core</exclude>
         </testsuite>
     </testsuites>
     <source>
