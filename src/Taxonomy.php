@@ -10,6 +10,7 @@ declare( strict_types=1 );
 namespace SugarCommerce\ContentTypes;
 
 use SugarCommerce\ContentTypes\Support\Labels;
+use SugarCommerce\ContentTypes\Support\Rewrites;
 
 /**
  * A taxonomy, registered with labels that use its own name.
@@ -103,6 +104,7 @@ final class Taxonomy {
 				'public'            => true,
 				'show_admin_column' => true,
 				'show_in_rest'      => true,
+				'flush_rewrite'     => false,
 			],
 			$config
 		);
@@ -153,9 +155,13 @@ final class Taxonomy {
 		// would find them and have to decide what they mean.
 		$objects = (array) $config['objects'];
 
-		unset( $config['singular'], $config['plural'], $config['objects'], $config['text_domain'] );
+		unset( $config['singular'], $config['plural'], $config['objects'], $config['text_domain'], $config['flush_rewrite'] );
 
 		register_taxonomy( $this->taxonomy, $objects, $config );
+
+		if ( $this->config['flush_rewrite'] ) {
+			Rewrites::watch( 'taxonomy', $this->taxonomy, [ 'objects' => $objects ] + $config );
+		}
 	}
 
 	/**

@@ -9,8 +9,14 @@ declare( strict_types=1 );
 
 namespace SugarCommerce\ContentTypes;
 
+use SugarCommerce\ContentTypes\Support\BlockTemplate;
 use SugarCommerce\ContentTypes\Support\Icon;
 use SugarCommerce\ContentTypes\Support\Labels;
+use SugarCommerce\ContentTypes\Support\Rewrites;
+use SugarCommerce\ContentTypes\Traits\PostType\Capabilities;
+use SugarCommerce\ContentTypes\Traits\PostType\Columns;
+use SugarCommerce\ContentTypes\Traits\PostType\Meta;
+use SugarCommerce\ContentTypes\Traits\PostType\Statuses;
 
 /**
  * A post type, registered with labels that use its own name.
@@ -35,10 +41,27 @@ use SugarCommerce\ContentTypes\Support\Labels;
  *         ],
  *     ] );
  *
- * Columns are deliberately not here: a columns library does that, for every
- * kind of list table rather than only this one.
+ * And what a plugin's post type usually needs and core leaves to you, each
+ * opt-in and each a trait in Traits/PostType: capabilities of its own,
+ * granted and revoked (`grant_to`, grant_capabilities()); post statuses
+ * (`statuses`); meta in the REST schema (`meta`); sortable meta columns
+ * (`columns`); rewrite rules flushed once when they change
+ * (`flush_rewrite`); and a block template written the short way
+ * (`template`). Richer list-table columns are the columns library's.
  */
 final class PostType {
+
+	use Capabilities;
+	use Columns;
+	use Meta;
+	use Statuses;
+
+	/**
+	 * Keys that are this library's, not register_post_type()'s.
+	 *
+	 * @var string[]
+	 */
+	private const array OWN = [ 'singular', 'plural', 'icon', 'text_domain', 'taxonomies', 'grant_to', 'statuses', 'meta', 'columns', 'flush_rewrite' ];
 
 	/**
 	 * The post type slug.
@@ -124,6 +147,11 @@ final class PostType {
 				'show_in_rest'  => true,
 				'supports'      => [ 'title', 'editor', 'thumbnail' ],
 				'menu_position' => null,
+				'grant_to'      => [ 'administrator' ],
+				'statuses'      => [],
+				'meta'          => [],
+				'columns'       => [],
+				'flush_rewrite' => false,
 			],
 			$config
 		);
@@ -145,6 +173,10 @@ final class PostType {
 
 		if ( is_string( $config['menu_position'] ) ) {
 			$config['menu_position'] = self::menu_position( $config['menu_position'] );
+		}
+
+		if ( isset( $config['template'] ) && is_array( $config['template'] ) ) {
+			$config['template'] = BlockTemplate::normalize( $config['template'] );
 		}
 
 		return $config;
@@ -197,7 +229,13 @@ final class PostType {
 		$taxonomies = (array) $config['taxonomies'];
 
 		// Ours, not register_post_type()'s.
-		unset( $config['singular'], $config['plural'], $config['icon'], $config['text_domain'], $config['taxonomies'] );
+		$config = array_diff_key( $config, array_flip( self::OWN ) );
+
+		// Core leaves meta out of a post's REST answer unless the post type
+		// supports custom fields, whatever the meta's show_in_rest says.
+		if ( $this->meta_in_rest() && is_array( $config['supports'] ) && ! in_array( 'custom-fields', $config['supports'], true ) ) {
+			$config['supports'][] = 'custom-fields';
+		}
 
 		// A list of slugs is what register_post_type() takes; anything given
 		// as a configuration array is registered below and attached here.
@@ -208,6 +246,14 @@ final class PostType {
 		);
 
 		register_post_type( $this->post_type, $config );
+
+		$this->register_statuses();
+		$this->register_meta();
+		$this->hook_columns();
+
+		if ( $this->config['flush_rewrite'] ) {
+			Rewrites::watch( 'post_type', $this->post_type, $config );
+		}
 
 		foreach ( $taxonomies as $key => $value ) {
 			if ( is_int( $key ) ) {

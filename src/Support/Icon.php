@@ -43,7 +43,7 @@ final class Icon {
 	 *
 	 * @var array<string, string>
 	 */
-	private const SHORTCUTS = [
+	private const array SHORTCUTS = [
 		'document'  => 'dashicons-media-document',
 		'docs'      => 'dashicons-media-document',
 		'file'      => 'dashicons-media-document',
